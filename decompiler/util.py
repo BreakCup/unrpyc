@@ -197,9 +197,9 @@ def reconstruct_paraminfo(paraminfo):
             rv.append("*")
         for param in nameonly:
             rv.append(sep())
-            rv.append(parameter[0])
+            rv.append(param[0])
             if param[1] is not None:
-                rv.append("=%s" % parameter[1])
+                rv.append("=%s" % param[1])
     if paraminfo.extrakw:
         rv.append(sep())
         rv.append("**%s" % paraminfo.extrakw)
