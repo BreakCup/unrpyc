@@ -28,7 +28,9 @@ from StringIO import StringIO
 
 import magic
 magic.fake_package(b"renpy")
+magic.fake_package(b"store")
 import renpy
+import store
 
 import screendecompiler
 import sl2decompiler
@@ -875,3 +877,69 @@ class Decompiler(DecompilerBase):
                                 self.skip_indent_until_write,
                                 self.printlock)
         self.skip_indent_until_write = False
+
+    # innocent witches user-define statement
+    @dispatch(store.locations.CallLocation)
+    def print_calllocation(self, ast):
+        self.indent()
+        self.write('# =========== user-define statement begin ===========')
+        self.indent()
+        self.write('call location %s:' % ast.location)
+        if ast.zones:
+            with self.increase_indent():
+                for zone, props, condition, show, block in ast.zones:
+                    self.indent()
+                    if isinstance(zone, tuple):
+                        zone, zone_tag, zorder, behind = zone
+                    else:
+                        zone_tag = None
+                        zorder = None
+                        behind = []
+                    self.write(' %s'% zone)
+                    if zone_tag:
+                        self.write(' %s' % ' '.join(zone_tag))
+                    if zorder:
+                        if isinstance(zorder, basestring):
+                            self.write(' zorder %s' % zorder)
+                        else:
+                            self.write(' zorder %s' % ' '.join(zorder))
+                    if len(behind):
+                        self.write(' behind %s' % ','.join(behind))
+
+                    if props:
+                        arguments = props.arguments
+                        extrakw = props.extrakw
+                        extrapos = props.extrapos
+                        argument = ''
+                        for name, value in arguments:
+                            if name:
+                                content = '%s = %s' % (name, value)
+                            else:
+                                content = '%s' % value
+                            if argument:
+                                argument += ', %s' % content
+                            else:
+                                argument += content
+                        if extrapos:
+                            argument += ', *%s' % extrapos
+                        if extrakw:
+                            argument += ', **%s' % extrakw
+                        self.write(' pass (%s)' % argument)
+
+                    if show != u'True':
+                        self.write(' showif %s' % show)
+
+                    if condition != u'True':
+                        self.write(' if %s' % condition)
+
+                    self.write(':')
+                    self.print_nodes(block, 1)
+        self.indent()
+        self.write('# =========== user-define statement end ===========')
+
+
+
+
+
+
+
